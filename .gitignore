@@ -1,0 +1,31 @@
+# Specifies intentionally untracked files to ignore when using Git
+# http://git-scm.com/docs/gitignore
+
+node_modules/
+platforms/
+plugins/
+.tmp/
+
+# private setting
+/www/js/config.js
+
+### Node ###
+# Logs
+logs
+*.log
+
+### Windows ###
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+### OSX ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### Android ###
+*.keystore
