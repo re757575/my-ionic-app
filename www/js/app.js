@@ -22,6 +22,43 @@ angular.module('starter', ['ionic', 'starter.controllers'])
   });
 })
 
+.run(function($rootScope, $ionicPlatform, $ionicHistory, $location) {
+  $ionicPlatform.registerBackButtonAction(function(e) {
+
+    e.preventDefault();
+
+    if ($rootScope.backButtonPressedOnceToExit && $location.path() == '/app/playlists') {
+      // 離開App
+      ionic.Platform.exitApp();
+    } else if ($ionicHistory.backView()) {
+      // 返回上一頁
+      $ionicHistory.goBack();
+      console.log('History Back');
+    } else {
+      // 提示再按一次退出,提示2秒
+      $rootScope.backButtonPressedOnceToExit = true;
+      // toast
+      window.plugins.toast.showWithOptions({
+        message: "再按一次退出",
+        duration: "short",
+        position: "bottom",
+        addPixelsY: -200  // added a negative value to move it up a bit (default 0)
+      },
+        function(a) {
+        console.log('toast success: ' + a);
+      },
+        function(b) {
+        console.log('toast error: ' + b);
+      });
+
+      setTimeout(function() {
+        $rootScope.backButtonPressedOnceToExit = false;
+      }, 2000);
+    }
+
+  }, 101);
+})
+
 .config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
 
@@ -30,24 +67,6 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     abstract: true,
     templateUrl: 'templates/menu.html',
     controller: 'AppCtrl'
-  })
-
-  .state('app.search', {
-    url: '/search',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/search.html'
-      }
-    }
-  })
-
-  .state('app.browse', {
-    url: '/browse',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/browse.html'
-      }
-    }
   })
 
   .state('app.playlists', {
