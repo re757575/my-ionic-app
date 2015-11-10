@@ -41,7 +41,7 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('LocationCtrl', function($scope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile) {
+.controller('LocationCtrl', function($scope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile, $ionicPlatform) {
 
   document.addEventListener("deviceready", onDeviceReady, false);
 
@@ -57,12 +57,14 @@ angular.module('starter.controllers', [])
     //   return;
     // }
 
+    $scope.isAbortGeo = false;
+
     $ionicLoading.show({
         template: '<ion-spinner icon="bubbles"></ion-spinner><br/>取得目前位置',
         showBackdrop: false
     });
 
-    var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 30000 });
+    var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
   };
 
   $scope.toggleStreetView = function () {
@@ -120,7 +122,7 @@ angular.module('starter.controllers', [])
     }
   };
 
-  $scope.closeFullscreenView= function() {
+  $scope.closeFullscreenView = function() {
     if (window.StatusBar) {
       StatusBar.show();
     }
@@ -133,7 +135,19 @@ angular.module('starter.controllers', [])
         template: '<ion-spinner icon="bubbles"></ion-spinner><br/>取得目前位置'
     });
 
-    var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 30000 });
+    var callback = function() {
+      $scope.isAbortGeo = true;
+      $ionicLoading.hide();
+      deregister();
+    };
+
+    var priority = 600;
+
+    var deregister = $ionicPlatform.registerBackButtonAction(callback, priority);
+
+    $scope.$on('$destroy', deregister);
+
+    var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
   }
 
   function onSuccess(position) {
@@ -175,8 +189,28 @@ angular.module('starter.controllers', [])
   }
 
   function onError(error) {
-      alert('無法定位目前位置');
-      console.error(error);
+    if ($scope.isAbortGeo && $scope.isAbortGeo === true) {
+      return false;
+    }
+
+    $ionicLoading.hide();
+
+    var msg = '';
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+          msg = "你拒絕使用地理位置的要求"
+          break;
+      case error.POSITION_UNAVAILABLE:
+          msg = "找不到位置信息"
+          break;
+      case error.TIMEOUT:
+          msg = "連線逾時"
+          break;
+      case error.UNKNOWN_ERROR:
+          msg = "未知的錯誤"
+          break;
+    }
+    alert(msg);
   }
 
   // Reverse Geocoding via Geocoding API (Web service)
