@@ -6,7 +6,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('starter', ['ionic', 'starter.controllers', 'ngCordova'])
 
-.run(function($ionicPlatform) {
+.run(function($rootScope, $ionicPlatform) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -26,42 +26,17 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ngCordova'])
     // Enable background mode
     cordova.plugins.backgroundMode.enable();
 
-    var interval = null, count = 0;
-
-    // Called when background mode has been activated
-    cordova.plugins.backgroundMode.onactivate = function () {
-
-        console.log('backgroundMode.onactivate');
-
-        interval = setInterval(function () {
-
-            console.log('backgroundMode.onactivate interval');
-
-            if (count == 2 && cordova.plugins.backgroundMode.isActive()) {
-
-                // Modify the currently displayed notification
-                cordova.plugins.backgroundMode.configure({
-                  title: 'backgroundMode start',
-                  text: 'Doing heavy tasks.',
-                  resume: true,
-                  silent: false
-                });
-            }
-
-            count++;
-        }, 3000);
-    };
+    $rootScope.interval = null;
 
     // 回復前景
     cordova.plugins.backgroundMode.ondeactivate = function(){
-         // after several times of interval log, this get called
-         console.log('backgroundMode.ondeactivate');
-         window.clearInterval(interval);
-         count = 0;
+       // after several times of interval log, this get called
+       console.log('backgroundMode.ondeactivate');
+       window.clearInterval($rootScope.interval);
     };
 
     cordova.plugins.backgroundMode.onfailure = function(errorCode) {
-        alert('Error: '. errorCode);
+      alert('Error: '. errorCode);
     };
 
   }, false);

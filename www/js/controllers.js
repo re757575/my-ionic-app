@@ -41,7 +41,7 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('LocationCtrl', function($scope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile, $ionicPlatform) {
+.controller('LocationCtrl', function($scope, $rootScope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile, $ionicPlatform) {
 
   document.addEventListener("deviceready", onDeviceReady, false);
 
@@ -166,6 +166,28 @@ angular.module('starter.controllers', [])
     $scope.$on('$destroy', deregister);
 
     var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
+
+    cordova.plugins.backgroundMode.onactivate = function () {
+
+        console.log('backgroundMode.onactivate');
+
+        $rootScope.interval = setInterval(function () {
+
+            console.log('backgroundMode.onactivate interval');
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
+
+            // Modify the currently displayed notification
+            cordova.plugins.backgroundMode.configure({
+              title: 'backgroundMode start',
+              text: $scope.lat +','+ $scope.long,
+              resume: true,
+              silent: false
+            });
+
+        }, 10000);
+    };
+
   }
 
   function onSuccess(position) {
@@ -199,6 +221,8 @@ angular.module('starter.controllers', [])
         pitch: 0
       }));
 
+      $scope.lat = lat;
+      $scope.long = long;
       $scope.panorama = panorama;
       $scope.map = map;
       $scope.mapOptions = mapOptions;
