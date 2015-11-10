@@ -13,13 +13,63 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     if (window.cordova && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       cordova.plugins.Keyboard.disableScroll(true);
-
     }
     if (window.StatusBar) {
       // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
   });
+
+  document.addEventListener('deviceready', function () {
+
+    // 背景模式預設值
+    cordova.plugins.backgroundMode.setDefaults({
+      silent: true
+    });
+
+    // Enable background mode
+    cordova.plugins.backgroundMode.enable();
+
+    var interval = null, count = 0;
+
+    // Called when background mode has been activated
+    cordova.plugins.backgroundMode.onactivate = function () {
+
+        console.log('backgroundMode.onactivate');
+
+        interval = setInterval(function () {
+
+            console.log('backgroundMode.onactivate interval');
+
+            if (count == 2 && cordova.plugins.backgroundMode.isActive()) {
+
+                // Modify the currently displayed notification
+                cordova.plugins.backgroundMode.configure({
+                  title: 'backgroundMode start',
+                  text: 'Doing heavy tasks.',
+                  resume: true,
+                  silent: false
+                });
+            }
+
+            count++;
+        }, 3000);
+    };
+
+    // 回復前景
+    cordova.plugins.backgroundMode.ondeactivate = function(){
+         // after several times of interval log, this get called
+         console.log('backgroundMode.ondeactivate');
+         window.clearInterval(interval);
+         count = 0;
+    };
+
+    cordova.plugins.backgroundMode.onfailure = function(errorCode) {
+        alert('Error: '. errorCode);
+    };
+
+  }, false);
+
 })
 
 .run(function($rootScope, $ionicPlatform, $ionicHistory, $location) {
