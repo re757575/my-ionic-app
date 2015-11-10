@@ -1,0 +1,53 @@
+<style>
+  #map {
+    height: 90%;
+    width: 100%;
+  }
+  #map-fullscreen {
+    height: 100%;
+    width: 100%;
+  }
+  .scroll {
+    height: 95%;
+    padding: 5px;
+  }
+</style>
+
+<ion-view class="bar-dark" view-title="Location">
+  <ion-content>
+
+    <button
+      class="button button-small button-outline button-dark icon-left ion-location"
+      ng-click="centerOnMe()"
+      style=" margin-bottom: 10px;">Find Me
+    </button>
+
+    <button
+      class="button button-small button-outline button-dark icon-left ion-navigate"
+      ng-click="toggleStreetView()"
+      style=" margin-bottom: 10px;">切換街景
+    </button>
+
+    <button
+      class="button button-small button-outline button-dark icon-left ion-arrow-expand"
+      ng-click="fullscreenView()"
+      style=" margin-bottom: 10px;">全銀幕
+    </button>
+
+    <div id="geolocation"></div>
+    <div id="map" data-tap-disabled="true"></div>
+
+    <script id="map-modal" type="text/ng-template">
+      <ion-modal-view>
+        <ion-header-bar>
+          <button class="button button-clear" ng-click="toggleFullScreenStreetView()">切換街景</button>
+          <button class="button button-clear" ng-click="closeFullscreenView()">Close</button>
+        </ion-header-bar>
+        <ion-content>
+          <div id="map-fullscreen" data-tap-disabled="true"></div>
+        </ion-content>
+      </ion-modal-view>
+    </script>
+
+  </ion-content>
+</ion-view>
