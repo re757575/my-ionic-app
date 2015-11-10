@@ -60,9 +60,24 @@ angular.module('starter.controllers', [])
     $scope.isAbortGeo = false;
 
     $ionicLoading.show({
-        template: '<ion-spinner icon="bubbles"></ion-spinner><br/>取得目前位置',
-        showBackdrop: false
+      content: 'Loading',
+      animation: 'fade-in',
+      showBackdrop: true,
+      maxWidth: 200,
+      showDelay: 0,
+      template: '取得目前位置...'
     });
+
+    var priority = 600;
+    var callback = function() {
+      $scope.isAbortGeo = true;
+      $ionicLoading.hide();
+      // 註銷註冊的事件
+      deregister();
+    };
+    var deregister = $ionicPlatform.registerBackButtonAction(callback, priority);
+
+    $scope.$on('$destroy', deregister);
 
     var watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
   };
@@ -132,17 +147,20 @@ angular.module('starter.controllers', [])
   function onDeviceReady() {
 
     $ionicLoading.show({
-        template: '<ion-spinner icon="bubbles"></ion-spinner><br/>取得目前位置'
+      content: 'Loading',
+      animation: 'fade-in',
+      showBackdrop: true,
+      maxWidth: 200,
+      showDelay: 0,
+      template: '取得目前位置...'
     });
 
+    var priority = 600;
     var callback = function() {
       $scope.isAbortGeo = true;
       $ionicLoading.hide();
       deregister();
     };
-
-    var priority = 600;
-
     var deregister = $ionicPlatform.registerBackButtonAction(callback, priority);
 
     $scope.$on('$destroy', deregister);
