@@ -73,7 +73,7 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ngCordova'])
 
     e.preventDefault();
 
-    if ($rootScope.backButtonPressedOnceToExit && $location.path() == '/app/playlists') {
+    if ($rootScope.backButtonPressedOnceToExit && $location.path() == '/app/location') {
       // 離開App
       ionic.Platform.exitApp();
     } else if ($ionicHistory.backView()) {
@@ -124,26 +124,6 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ngCordova'])
       }
     }
   })
-
-  .state('app.playlists', {
-    url: '/playlists',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/playlists.html',
-        controller: 'PlaylistsCtrl'
-      }
-    }
-  })
-
-  .state('app.single', {
-    url: '/playlists/:playlistId',
-    views: {
-      'menuContent': {
-        templateUrl: 'templates/playlist.html',
-        controller: 'PlaylistCtrl'
-      }
-    }
-  });
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/app/location');
