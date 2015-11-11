@@ -41,7 +41,7 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('LocationCtrl', function($scope, $rootScope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile, $ionicPlatform) {
+.controller('LocationCtrl', function($scope, $rootScope, $ionicModal, $stateParams, $cordovaGeolocation, $ionicLoading, $http, $compile, $ionicPlatform, $q, $filter) {
 
   document.addEventListener("deviceready", onDeviceReady, false);
 
@@ -169,23 +169,47 @@ angular.module('starter.controllers', [])
 
     cordova.plugins.backgroundMode.onactivate = function () {
 
+        var _address = '';
         console.log('backgroundMode.onactivate');
 
-        $rootScope.interval = setInterval(function () {
+        $rootScope.watchId = navigator.geolocation.watchPosition(function(position) {
 
-            console.log('backgroundMode.onactivate interval');
+          console.log('backgroundMode.onactivate watchPosition');
 
-            navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 15000 });
+          var lat = position.coords.latitude,
+              long = position.coords.longitude;
 
-            // Modify the currently displayed notification
-            cordova.plugins.backgroundMode.configure({
-              title: 'backgroundMode start',
-              text: $scope.lat +','+ $scope.long,
-              resume: true,
-              silent: false
-            });
+          // Modify the currently displayed notification
+          cordova.plugins.backgroundMode.configure({
+            title: 'backgroundMode start',
+            text: lat +','+ long,
+            resume: true,
+            silent: false
+          });
 
-        }, 10000);
+          var dataObj = {
+              date: $filter('date')(new Date(), "yyyy-MM-dd HH:mm:ss"),
+              latitude: lat,
+              longitude: long,
+              address: 'null'
+          };
+
+          reverseGeocoding(lat, long).then(
+            function(data) {
+              // 地址改變才上傳資料
+              if (_address !== data.address) {
+                _address = data.address;
+                dataObj.address = data.address;
+                update(dataObj);
+              }
+            },
+            function(error) {
+              console.error(error);
+            }
+          );
+
+        },
+        onError, { timeout: 15000 });
     };
 
   }
@@ -227,7 +251,36 @@ angular.module('starter.controllers', [])
       $scope.map = map;
       $scope.mapOptions = mapOptions;
 
-      reverseGeocoding(lat, long, map, marker);
+      var result = reverseGeocoding(lat, long);
+
+      result.then(
+        function(data) {
+          console.warn(data);
+          var element = document.getElementById('geolocation');
+          element.innerHTML = '緯度: '      + lat     + ' ' +
+                              '經度: '      + long     + '<br />' +
+                              '大約位置: '  + data.address + '<br />'; +
+                              '<hr />';
+
+          var contentString = "<div><a ng-click='clickTest()'>"+ data.address +"</a></div>";
+          var compiled = $compile(contentString)($scope);
+
+          var infowindow = new google.maps.InfoWindow({
+            content: compiled[0]
+          });
+
+          google.maps.event.addListener(marker, 'click', function() {
+            infowindow.open(map, marker);
+          });
+
+          $ionicLoading.hide();
+        },
+        function(error) {
+          alert(data);
+          console.info(data);
+          $ionicLoading.hide();
+        }
+      );
   }
 
   function onError(error) {
@@ -256,7 +309,9 @@ angular.module('starter.controllers', [])
   }
 
   // Reverse Geocoding via Geocoding API (Web service)
-  function reverseGeocoding(lat, lng, map, marker) {
+  function reverseGeocoding(lat, lng) {
+
+    var def = $q.defer();
 
     var address = '';
 
@@ -273,37 +328,51 @@ angular.module('starter.controllers', [])
       cache: false,
       timeout: 30000,
       responseType: "json",
-      // timeout: def.promise,
+      timeout: def.promise
       // transformRequest: function(data) {},
       // transformResponse: function(data) {}
     })
     .success(function (data, status) {
-
-        address = data.results[0].formatted_address;
-
-        var element = document.getElementById('geolocation');
-        element.innerHTML = '緯度: '      + lat     + ' ' +
-                            '經度: '      + lng     + '<br />' +
-                            '大約位置: '  + address + '<br />'; +
-                            '<hr />';
-
-        var contentString = "<div><a ng-click='clickTest()'>"+ address +"</a></div>";
-        var compiled = $compile(contentString)($scope);
-
-        var infowindow = new google.maps.InfoWindow({
-          content: compiled[0]
-        });
-
-        google.maps.event.addListener(marker, 'click', function() {
-          infowindow.open(map, marker);
-        });
-
-        $ionicLoading.hide();
+      def.resolve({
+        'status': 1,
+        'address': data.results[0].formatted_address
+      });
     })
     .error(function (data, status) {
-        alert(data);
-        console.info(data);
-        $ionicLoading.hide();
+      def.reject({
+        'status': 0,
+        'msg': data
+      });
+    });
+
+    return def.promise;
+  }
+
+  // 上傳資料到GAS
+  function update(obj) {
+
+   var param = {
+      'date': obj.date,
+      'latitude': obj.latitude,
+      'longitude': obj.longitude,
+      'address': obj.address,
+      'callback': 'JSON_CALLBACK'
+    };
+
+    var service_url = 'https://script.google.com/macros/s/{APP_SCRIPT_KRY}/exec?';
+
+    var paramStr = Object.keys(param).map(function(key) {
+        return key + '=' + param[key];
+    }).join('&');
+
+    var url = encodeURI(service_url + paramStr);
+
+    $http.jsonp(url, {})
+    .success(function (data, status) {
+      console.info(data);
+    })
+    .error(function(data, status) {
+      console.info(data);
     });
   }
 

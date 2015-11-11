@@ -32,7 +32,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'ngCordova'])
     cordova.plugins.backgroundMode.ondeactivate = function(){
        // after several times of interval log, this get called
        console.log('backgroundMode.ondeactivate');
-       window.clearInterval($rootScope.interval);
+       // stop geolocation watch
+       navigator.geolocation.clearWatch($rootScope.watchId);
     };
 
     cordova.plugins.backgroundMode.onfailure = function(errorCode) {
